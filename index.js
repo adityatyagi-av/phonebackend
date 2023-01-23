@@ -50,9 +50,11 @@ app.get('/api/persons/:id',(req,res)=>{
 })
 
 app.delete('/api/persons/:id',(req,res)=>{
-    const person=Person.filter(person=>person.id!==id)
-    res.send('Delete request to homepage')
-    return res.status(204).end()
+    Person.findByIdAndRemove(req.params.id)
+    .then(result=>{
+        res.status(204).end()
+    })
+    .catch(error=>next(error))
 })
 
 
@@ -68,11 +70,28 @@ app.post('/api/persons',(req,res)=>{
         name: body.name,
         number: body.number,
     })
-    person.save().then(result=>{
+    person.save()
+    .then(result=>{
         res.json(result)
     })
     
 })
+
+app.put('/api/person/:id',(req,res,next)=>{
+    const body =req.body
+
+    const person={
+        name: body.name,
+        number: body.number,
+    }
+
+    Person.findByIdAndUpdate(req.params.id,person,{new:true})
+    .then(updatedPerson=>{
+        res.json(updatedPerson)
+    })
+    .catch(error=>next(error))
+})
+
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
