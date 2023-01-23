@@ -18,7 +18,11 @@ connect
 url)
   .then(result => {    console.log('connected to MongoDB')  })  .catch((error) => {    console.log('error connecting to MongoDB:', error.message)  })
 const phoneSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    minLength:3,
+    required:[true,'Minimum length of the name should be 3']
+  },
   number: Number,
 })
 
