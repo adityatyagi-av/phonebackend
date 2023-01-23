@@ -1,40 +1,26 @@
 const express = require('express') 
 const app=express()
-
 require('dotenv').config()
 const Person = require('./models/phone')
+const cors=require('cors')
+
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method)
+    console.log('Path:  ', request.path)
+    console.log('Body:  ', request.body)
+    console.log('---')
+    next()
+  }
+
 
 app.use(express.json())
+app.use(cors())
+app.use(requestLogger)
+
+
 
 app.get('/',(req,res)=>{
     res.send("<h1>app.get working</h1>")
-})
-
-app.get('/info',(req,res)=>{
-    const d = new Date()
-    console.log(d)
-    res.send(`<div>
-                <p>Phonebook has info for ${persons.length} people</p>
-                <p>${d}</p>
-                </div>`)
-})
-app.get('/api/persons/:id',(req,res)=>{
-    const id=req.params.id
-    console.log(typeof(id))
-    const person=Person.find(person=>person.id===id)
-    console.log(person)
-    if(person){
-       res.json(person) 
-    }
-    else{
-        res.status(400).end()
-    }
-})
-
-app.delete('/api/persons/:id',(req,res)=>{
-    const person=Person.filter(person=>person.id!==id)
-    res.send('Delete request to homepage')
-    return res.status(204).end()
 })
 app.get('/api/persons',(req,res)=>{
     Person.find({}).then(person=>{
@@ -42,6 +28,33 @@ app.get('/api/persons',(req,res)=>{
     })
     
 })
+app.get('/info',(req,res)=>{
+    const d = new Date()
+    console.log(d)
+    res.send(`<div>
+                <p>Phonebook has info for ${Person.length} people</p>
+                <p>${d}</p>
+                </div>`)
+})
+app.get('/api/persons/:id',(req,res)=>{
+   Person.findById(req.params.id)
+   .then(person=>{
+    if(person){
+        res.json(person)
+    }
+    else{
+        res.status(404).end()
+    }
+   })
+   .catch(error=>next(error))
+})
+
+app.delete('/api/persons/:id',(req,res)=>{
+    const person=Person.filter(person=>person.id!==id)
+    res.send('Delete request to homepage')
+    return res.status(204).end()
+})
+
 
 app.post('/api/persons',(req,res)=>{
     const body=req.body
@@ -67,6 +80,19 @@ const unknownEndpoint = (request, response) => {
   
   app.use(unknownEndpoint)
   
-const PORT =process.env.PORT||3001
+  const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } 
+  
+    next(error)
+  }
+  
+  // this has to be the last loaded middleware.
+  app.use(errorHandler)
+
+const PORT =process.env.PORT||3002
 app.listen(PORT)
     console.log(`Server running on port ${PORT}`)
